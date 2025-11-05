@@ -28,7 +28,7 @@
 		"enabled":                  true,
         "extIcon":                  "https://raw.githubusercontent.com/ioBroker/ioBroker.megad/master/admin/megad.png",
         "type":                     "hardware",
-        "localLink":                "http://%native_ip%/%password%",
+        "localLink":                "http://%native_ip%/",
         "config": {
             "width":     1050,
             "height":    800,
