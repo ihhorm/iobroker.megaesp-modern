@@ -1,0 +1,27 @@
+{
+  "name": "iobroker.megaesp-modern",
+  "version": "0.1.0",
+  "description": "Modernised ioBroker adapter for Mega-ESP devices (ESP8266 firmware)",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js"
+  },
+  "author": "MegaESP Community",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/megaesp-modern-adapter.git"
+  },
+  "keywords": [
+    "iobroker",
+    "megaesp",
+    "esp8266",
+    "home-automation"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@iobroker/adapter-core": "^2.6.0"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}
