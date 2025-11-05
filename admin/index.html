@@ -13,6 +13,295 @@
 <script type="text/javascript" src="../../js/adapter-settings.js"></script>
 
 <style>
+    :root {
+        color-scheme: light;
+    }
+
+    body {
+        margin: 0;
+        font-family: "Inter", "Segoe UI", Helvetica, Arial, sans-serif;
+        background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+        color: #0f172a;
+    }
+
+    #adapter-container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 32px 24px 48px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .page-header {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+    }
+
+    .page-header img {
+        width: 72px;
+        height: 72px;
+        object-fit: contain;
+        border-radius: 16px;
+        background: rgba(59, 130, 246, 0.08);
+        padding: 10px;
+    }
+
+    .page-header h2,
+    .page-header h3 {
+        margin: 0;
+        font-size: 1.6rem;
+        font-weight: 600;
+        color: #0f172a;
+    }
+
+    .section-card {
+        background: rgba(255, 255, 255, 0.92);
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 20px 45px -25px rgba(30, 64, 175, 0.45);
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        backdrop-filter: blur(6px);
+    }
+
+    .section-card__header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .section-title {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .settings-grid {
+        display: grid;
+        gap: 18px 24px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .field--wide {
+        grid-column: 1 / -1;
+    }
+
+    .field--compact {
+        max-width: 240px;
+    }
+
+    .field--checkbox .field__control {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .field__label {
+        font-size: 0.75rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #64748b;
+        font-weight: 600;
+    }
+
+    .field__control input,
+    .field__control select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #cbd5f5;
+        border-radius: 10px;
+        background: #fff;
+        font-size: 0.95rem;
+        color: #0f172a;
+        box-sizing: border-box;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .field__control input:focus,
+    .field__control select:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        outline: none;
+    }
+
+    .field__control input[type="checkbox"] {
+        width: auto;
+        padding: 0;
+        border: none;
+        box-shadow: none;
+    }
+
+    .field__note {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-left: 6px;
+    }
+
+    .field__inline {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .field__inline input {
+        flex: 0 0 auto;
+    }
+
+    .action-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    #adapter-container button:not(.icon-btn),
+    #adapter-container .ui-button:not(.icon-btn) {
+        border-radius: 12px;
+        border: none;
+        background: linear-gradient(135deg, #6366f1, #4338ca);
+        color: #fff;
+        font-weight: 600;
+        padding: 10px 18px;
+        cursor: pointer;
+        box-shadow: 0 12px 24px -12px rgba(67, 56, 202, 0.6);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    }
+
+    #adapter-container button:not(.icon-btn):hover,
+    #adapter-container .ui-button:not(.icon-btn):hover {
+        transform: translateY(-1px);
+        box-shadow: 0 18px 32px -16px rgba(99, 102, 241, 0.55);
+    }
+
+    #adapter-container button:not(.icon-btn):disabled,
+    #adapter-container .ui-button:not(.icon-btn):disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    .ports-grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    }
+
+    .port-card {
+        background: rgba(248, 250, 252, 0.92);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 18px 35px -25px rgba(15, 23, 42, 0.45);
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .port-card__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .port-card__badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 14px;
+        border-radius: 999px;
+        background: rgba(99, 102, 241, 0.12);
+        color: #3730a3;
+        font-weight: 600;
+    }
+
+    .port-card__actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .icon-btn {
+        border-radius: 10px;
+        background: rgba(99, 102, 241, 0.14);
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+
+    .icon-btn:hover {
+        background: rgba(79, 70, 229, 0.22);
+    }
+
+    .icon-btn.ui-button {
+        width: 36px !important;
+        height: 36px !important;
+        padding: 0 !important;
+        box-shadow: none;
+        background: rgba(99, 102, 241, 0.14);
+    }
+
+    .icon-btn.ui-button:hover {
+        background: rgba(79, 70, 229, 0.22);
+    }
+
+    .port-card__body {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .port-card__grid {
+        display: grid;
+        gap: 14px 18px;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+
+    .empty-state {
+        padding: 40px 24px;
+        text-align: center;
+        color: #64748b;
+        background: rgba(248, 250, 252, 0.8);
+        border: 2px dashed rgba(148, 163, 184, 0.45);
+        border-radius: 20px;
+        font-weight: 500;
+    }
+
+    .dialog-table {
+        width: 100%;
+    }
+
+    .dialog-table td {
+        padding: 6px 10px;
+    }
+
+    #change-dialog input {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid #cbd5f5;
+        border-radius: 10px;
+        box-sizing: border-box;
+    }
+
+    #change-dialog input[type="checkbox"] {
+        width: auto;
+        padding: 0;
+    }
+
     .no-space {
         border: 0px !important;
         margin: 0px;
@@ -47,6 +336,14 @@
         "Name":                 {"en": "Name",                  "de": "Name",                       "ru": "Имя"},
         "Room":                 {"en": "Room",                  "de": "Zimmer",                     "ru": "Комната"},
         "Role":                 {"en": "Role",                  "de": "Rolle",                      "ru": "Роль"},
+        "Delete port":          {"en": "Delete port",           "de": "Port löschen",               "ru": "Удалить порт"},
+        "Move up":              {"en": "Move up",               "de": "Nach oben",                  "ru": "Выше"},
+        "Move down":            {"en": "Move down",             "de": "Nach unten",                 "ru": "Ниже"},
+        "No ports configured yet": {
+            "en": "No ports configured yet",
+            "de": "Noch keine Ports konfiguriert",
+            "ru": "Порты еще не настроены"
+        },
         "Type":                 {"en": "Type",                  "de": "Typ",                        "ru": "Тип"},
         "Mode":                 {"en": "Mode",                  "de": "Modus",                      "ru": "Режим"},
         "NC":                   {"en": "Not configured",        "de": "nicht benutzt",              "ru": "не используется"},
@@ -150,290 +447,250 @@
     var active   = false;
 
     function showOnePort(index, portSettings) {
-        // name, room, role, pty(type), acm(Action), ecm(net action), m(mode), d(default state), pwm(0-255), misc (threshold)
-        var text = '<tr class="tspace">';
-        // index
-        text += '<td class="tspace">' + ((index == 9) ? ('P' + index) : ('P' + index)) + '</td>';
-        // name
-        text += '<td class="tspace"><input class="tvalue" type="text" data-type="name" data-port="' + index + '" value="' + (portSettings.name || '') + '" style="width: 100%"/></td>';
+        var card = [];
+        var fields = [];
 
-        // room
-        text += '<td class="tspace"><select class="tvalue" data-type="room" data-port="' + index + '" style="width: 100%"><option value=""></option>';
-
-        for (var r in rooms) {
-            text += '<option value="' + r + '" ' + ((portSettings.room == r) ? 'selected' : '') + '>' + rooms[r].common.name + '</option>';
+        function addField(label, controlHtml, extraClass) {
+            if (!controlHtml) return;
+            var modifier = extraClass ? ' ' + extraClass : '';
+            fields.push('<div class="field' + modifier + '"><div class="field__label">' + label + '</div><div class="field__control">' + controlHtml + '</div></div>');
         }
-        '</td>';
 
-        // role
-        text += '<td class="tspace"><input class="tvalue" type="text"  data-type="role" data-port="' + index + '" value="' + (portSettings.role || '') + '" style="width: 100%"/></td>';
+        card.push('<div class="port-card" data-port="' + index + '">');
+        card.push('<div class="port-card__header">');
+        card.push('<span class="port-card__badge">P' + index + '</span>');
+        card.push('<div class="port-card__actions">');
+        card.push('<button data-port="' + index + '" class="icon-btn btn-delete" title="' + _('Delete port') + '"></button>');
+        card.push('<button data-port="' + index + '" class="icon-btn btn-up"' + (index ? '' : ' disabled="disabled"') + ' title="' + _('Move up') + '"></button>');
+        card.push('<button data-port="' + index + '" class="icon-btn btn-down"' + ((index != ports.length - 1) ? '' : ' disabled="disabled"') + ' title="' + _('Move down') + '"></button>');
+        card.push('</div></div>');
+        card.push('<div class="port-card__body">');
 
-        // type
-        if (index == 0 || index == 1 || index == 2 || index == 3 || index == 4 || index == 5 || index == 6 || index == 7 || index == 8 || index == 9) {
-            text += '<td class="tspace"><select class="tvalue" ' + ((index == 9 && portSettings.pty == 2) ? 'disabled' : '') + ' data-type="pty" data-port="' + index + '" style="width: 100%">';
-            text += '<option value="255" ' + ((portSettings.pty == 255) ? 'selected' : '') + '>' + _('NC')              + '</option>';
-            text += '<option value="0" '   + ((portSettings.pty == 0)   ? 'selected' : '') + '>' + _('Input')           + '</option>';
-            text += '<option value="1" '   + ((portSettings.pty == 1)   ? 'selected' : '') + '>' + _('Output SW')       + '</option>';
-            text += '<option value="8" '   + ((portSettings.pty == 8)   ? 'selected' : '') + '>' + _('Output SL')       + '</option>';
-            text += '<option value="4" '   + ((portSettings.pty == 4)   ? 'selected' : '') + '>' + _('Output PWM')      + '</option>';
-            text += '<option value="5" '   + ((portSettings.pty == 5)   ? 'selected' : '') + '>' + _('WS281x')          + '</option>';
+        addField(_('Name'), '<input class="tvalue" type="text" data-type="name" data-port="' + index + '" value="' + (portSettings.name || '') + '"/>');
+
+        var roomSelect = '<select class="tvalue" data-type="room" data-port="' + index + '"><option value=""></option>';
+        for (var r in rooms) {
+            roomSelect += '<option value="' + r + '" ' + ((portSettings.room == r) ? 'selected' : '') + '>' + rooms[r].common.name + '</option>';
+        }
+        roomSelect += '</select>';
+        addField(_('Room'), roomSelect);
+
+        addField(_('Role'), '<input class="tvalue" type="text" data-type="role" data-port="' + index + '" value="' + (portSettings.role || '') + '"/>');
+
+        if (index <= 9) {
+            var typeSelect = '<select class="tvalue" ' + ((index == 9 && portSettings.pty == 2) ? 'disabled' : '') + ' data-type="pty" data-port="' + index + '">';
+            typeSelect += '<option value="255" ' + ((portSettings.pty == 255) ? 'selected' : '') + '>' + _('NC') + '</option>';
+            typeSelect += '<option value="0" ' + ((portSettings.pty == 0) ? 'selected' : '') + '>' + _('Input') + '</option>';
+            typeSelect += '<option value="1" ' + ((portSettings.pty == 1) ? 'selected' : '') + '>' + _('Output SW') + '</option>';
+            typeSelect += '<option value="8" ' + ((portSettings.pty == 8) ? 'selected' : '') + '>' + _('Output SL') + '</option>';
+            typeSelect += '<option value="4" ' + ((portSettings.pty == 4) ? 'selected' : '') + '>' + _('Output PWM') + '</option>';
+            typeSelect += '<option value="5" ' + ((portSettings.pty == 5) ? 'selected' : '') + '>' + _('WS281x') + '</option>';
             if (index == 0 || index == 1 || index == 3 || index == 4 || index == 5 || index == 7 || index == 8) {
-                text += '<option value="3" '   + ((portSettings.pty == 3)   ? 'selected' : '') + '>' + _('Digital Sensor')  + '</option>';
+                typeSelect += '<option value="3" ' + ((portSettings.pty == 3) ? 'selected' : '') + '>' + _('Digital Sensor') + '</option>';
             }
             if (index == 0) {
-                text += '<option value="9" '   + ((portSettings.pty == 9)   ? 'selected' : '') + '>' + _('DSenBUS')         + '</option>';
+                typeSelect += '<option value="9" ' + ((portSettings.pty == 9) ? 'selected' : '') + '>' + _('DSenBUS') + '</option>';
             }
             if (index == 7) {
-                text += '<option value="6" '   + ((portSettings.pty == 6)   ? 'selected' : '') + '>' + _('Bus I2C_SDA')     + '</option>';
+                typeSelect += '<option value="6" ' + ((portSettings.pty == 6) ? 'selected' : '') + '>' + _('Bus I2C_SDA') + '</option>';
             }
             if (index == 8) {
-                text += '<option value="7" '   + ((portSettings.pty == 7)   ? 'selected' : '') + '>' + _('Bus I2C_SCL')     + '</option>';
+                typeSelect += '<option value="7" ' + ((portSettings.pty == 7) ? 'selected' : '') + '>' + _('Bus I2C_SCL') + '</option>';
             }
             if (index == 9) {
-                text += '<option value="2" '   + ((portSettings.pty == 2)   ? 'selected' : '') + '>' + _('ADC')             + '</option>';
+                typeSelect += '<option value="2" ' + ((portSettings.pty == 2) ? 'selected' : '') + '>' + _('ADC') + '</option>';
             }
-        } else   
-        if (index >= 10) {
-            text += '<td class="tspace"><select class="tvalue" ' + ((index == 9 && portSettings.pty == 2) ? 'disabled' : '') + ' data-type="in" data-port="' + index + '" style="width: 100%">';
-            text += '<option value="0" '   + ((portSettings.in == 0)   ? 'selected' : '') + '>' + _('Output')      + '</option>';
-            text += '<option value="1" '   + ((portSettings.in == 1)   ? 'selected' : '') + '>' + _('Input')       + '</option>';
+            typeSelect += '</select>';
+            addField(_('Type'), typeSelect);
+        } else {
+            var inSelect = '<select class="tvalue" data-type="in" data-port="' + index + '">';
+            inSelect += '<option value="0" ' + ((portSettings.in == 0) ? 'selected' : '') + '>' + _('Output') + '</option>';
+            inSelect += '<option value="1" ' + ((portSettings.in == 1) ? 'selected' : '') + '>' + _('Input') + '</option>';
+            inSelect += '</select>';
+            addField(_('Type'), inSelect);
         }
-        '</td>';
 
-        // mode
-        if (index == 0 || index == 1 || index == 2 || index == 3 || index == 4 || index == 5 || index == 6 || index == 7 || index == 8 || index == 9) {
+        if (index <= 9) {
             var modes = null;
             if (portSettings.pty == 0) {
-                modes = [
-                    'normal opened',
-                    'on change',
-                    'normal closed',
-                    'modifier'
-                ];
+                modes = ['normal opened', 'on change', 'normal closed', 'modifier'];
             } else if (portSettings.pty == 1) {
-                modes = [
-                    'switch'
-                ];
+                modes = ['switch'];
             } else if (portSettings.pty == 2) {
-                modes = [
-                    'not monitored',
-                    '> threshold',
-                    '< threshold',
-                    '<> threshold'
-                ];
+                modes = ['not monitored', '> threshold', '< threshold', '<> threshold'];
             } else if (portSettings.pty == 3 && portSettings.d == 3) {
-                modes = [
-                    'not monitored',
-                    'T > threshold',
-                    'T < threshold',
-                    'T <> threshold'
-                ];
+                modes = ['not monitored', 'T > threshold', 'T < threshold', 'T <> threshold'];
             } else if (portSettings.pty == 3 && (portSettings.d == 1 || portSettings.d == 2)) {
-                modes = [
-                    'not monitored',
-                    'T > threshold',
-                    'T < threshold',
-                    'T <> threshold',
-                    'H > threshold',
-                    'H < threshold',
-                    'H <> threshold'
-                ];
+                modes = ['not monitored', 'T > threshold', 'T < threshold', 'T <> threshold', 'H > threshold', 'H < threshold', 'H <> threshold'];
             } else if (portSettings.pty == 4) {
-                modes = [
-                    'PWM'
-                ];
-            }    
-            if (modes) {
-                text += '<td class="tspace"><select class="tvalue" data-type="m" data-port="' + index + '">';
-
-                for (var m = 0; m < modes.length; m++) {
-                    text += '<option value="' + m + '" ' + ((portSettings.m == m) ? 'selected' : '') + '>' + _(modes[m]) + '</option>';
-                }
-                text += '</select</td>';
-            } else {
-                text += '<td class="tspace"></td>';
+                modes = ['PWM'];
             }
-        }
-        if (index >= 10) {
-            var modes = null;
+            if (modes) {
+                var modeSelect = '<select class="tvalue" data-type="m" data-port="' + index + '">';
+                for (var m = 0; m < modes.length; m++) {
+                    modeSelect += '<option value="' + m + '" ' + ((portSettings.m == m) ? 'selected' : '') + '>' + _(modes[m]) + '</option>';
+                }
+                modeSelect += '</select>';
+                addField(_('Mode'), modeSelect);
+            }
+        } else {
+            var pmModes = null;
             if (portSettings.in == 1) {
-                modes = [
-                    'normal opened',
-                    'on change',
-                    'normal closed'
-                ];
+                pmModes = ['normal opened', 'on change', 'normal closed'];
             } else if (portSettings.in == 0) {
-                modes = [
-                    'switch'
-                ];
+                pmModes = ['switch'];
             }
-            if (modes) {
-                text += '<td class="tspace"><select class="tvalue" data-type="pm" data-port="' + index + '">';
-
-                for (var m = 0; m < modes.length; m++) {
-                    text += '<option value="' + m + '" ' + ((portSettings.pm == m) ? 'selected' : '') + '>' + _(modes[m]) + '</option>';
+            if (pmModes) {
+                var pmSelect = '<select class="tvalue" data-type="pm" data-port="' + index + '">';
+                for (var p = 0; p < pmModes.length; p++) {
+                    pmSelect += '<option value="' + p + '" ' + ((portSettings.pm == p) ? 'selected' : '') + '>' + _(pmModes[p]) + '</option>';
                 }
-                text += '</select</td>';
-            } else {
-                text += '<td class="tspace"></td>';
+                pmSelect += '</select>';
+                addField(_('Mode'), pmSelect);
             }
         }
-        // buttons
-        text += '<td class="tspace"><table class="no-space"><tr class="no-space">';
-        text += '<td class="no-space"><button data-port="' + index + '" class="btn-delete"></button></td>';
-        text += index ? '<td class="no-space"><button data-port="' + index + '" class="btn-up"></button></td>' : '<td class="no-space"><div style="width: 24px"> </div></td>';
-        text += (index != ports.length - 1) ? '<td class="no-space"><button data-port="' + index + '" class="btn-down"></button></td>' : '<td class="no-space"></td>';
 
-        text += '</tr></table></td>';
-
-
-        text += '<td class="tspace">';
-
-        // acm(Action) and ecm(Net action)
         if (portSettings.pty == 0 || portSettings.pty == 2 || (portSettings.pty == 3 && (portSettings.d != 1 || portSettings.d != 2 || portSettings.d != 3))) {
-            // acm(Action)
-            text += _('Action:') + ' <input class="tvalue" data-type="acm" type="text" data-port="' + index + '" value="' + (portSettings.acm || '') + '"  style="width: 70px" maxsize="18"/>';
-            // ecm(Net action)
+            addField(_('Action:'), '<input class="tvalue" data-type="acm" type="text" data-port="' + index + '" value="' + (portSettings.acm || '') + '" maxlength="18"/>', 'field--compact');
             if ((portSettings.pty == 0 || portSettings.pty == 2 || (portSettings.pty == 3 && (portSettings.d != 1 || portSettings.d != 2 || portSettings.d != 3))) && portSettings.tr == 5) {
-                text += _('Mqtt:') + ' <input class="tvalue" data-type="mcm" type="text" data-port="' + index + '" value="' + (portSettings.mcm || '') + '" style="width: 70px" maxsize="25"/>';
+                addField(_('Mqtt:'), '<input class="tvalue" data-type="mcm" type="text" data-port="' + index + '" value="' + (portSettings.mcm || '') + '" maxlength="25"/>', 'field--compact');
             } else {
-                text += _('Net:') + ' <input class="tvalue" data-type="ecm" type="text" data-port="' + index + '" value="' + portSettings.ecm  + '" style="width: 70px" maxsize="35"/>';
-            } 
+                addField(_('Net:'), '<input class="tvalue" data-type="ecm" type="text" data-port="' + index + '" value="' + (portSettings.ecm || '') + '" maxlength="35"/>', 'field--compact');
+            }
         }
-        // acm(Action) MCP23017
         if (portSettings.in == 1) {
-            text += _('Action:') + ' <input class="tvalue" data-type="am" type="text" data-port="' + index + '" value="' + (portSettings.am || '') + '"  style="width: 70px" maxsize="18"/>';
+            addField(_('Action:'), '<input class="tvalue" data-type="am" type="text" data-port="' + index + '" value="' + (portSettings.am || '') + '" maxlength="18"/>', 'field--compact');
         }
 
-        // d(default state)
         if (portSettings.pty == 1) {
-            text += _('Default state:') + ' <select class="tvalue" data-type="d" data-port="' + index + '">';
-            text += '<option value="0" ' + ((portSettings.d == 0) ? 'selected' : '') + '>' + _('off') + '</option>';
-            text += '<option value="1" ' + ((portSettings.d == 1) ? 'selected' : '') + '>' + _('on') + '</option>';
-            text += '</select>';
+            var defaultSelect = '<select class="tvalue" data-type="d" data-port="' + index + '">';
+            defaultSelect += '<option value="0" ' + ((portSettings.d == 0) ? 'selected' : '') + '>' + _('off') + '</option>';
+            defaultSelect += '<option value="1" ' + ((portSettings.d == 1) ? 'selected' : '') + '>' + _('on') + '</option>';
+            defaultSelect += '</select>';
+            addField(_('Default state:'), defaultSelect);
         }
         if (portSettings.in == 0) {
-            text += _('Default state:') + ' <select class="tvalue" data-type="dm" data-port="' + index + '">';
-            text += '<option value="0" ' + ((portSettings.dm == 0) ? 'selected' : '') + '>' + _('off') + '</option>';
-            text += '<option value="1" ' + ((portSettings.dm == 1) ? 'selected' : '') + '>' + _('on') + '</option>';
-            text += '</select>';
+            var defaultMcp = '<select class="tvalue" data-type="dm" data-port="' + index + '">';
+            defaultMcp += '<option value="0" ' + ((portSettings.dm == 0) ? 'selected' : '') + '>' + _('off') + '</option>';
+            defaultMcp += '<option value="1" ' + ((portSettings.dm == 1) ? 'selected' : '') + '>' + _('on') + '</option>';
+            defaultMcp += '</select>';
+            addField(_('Default state:'), defaultMcp);
         }
         if (portSettings.pty == 4) {
-            text += _('Default state:') + ' <input class="tvalue" data-type="d" type="text" data-port="' + index + '" value="' + (portSettings.d || 0) + '" size=4 maxsize="3"/>';
+            addField(_('Default state:'), '<input class="tvalue" data-type="d" type="text" data-port="' + index + '" value="' + (portSettings.d || 0) + '" maxlength="3"/>', 'field--compact');
         }
         if (portSettings.pty == 9) {
-            text += _('Count (1-10):') + ' <input class="tvalue" data-type="d" type="text" data-port="' + index + '" value="' + (portSettings.d || 0) + '" size=1 maxsize="2"/>';
+            addField(_('Count (1-10):'), '<input class="tvalue" data-type="d" type="text" data-port="' + index + '" value="' + (portSettings.d || 0) + '" maxlength="2"/>', 'field--compact');
         }
 
-        // Sensor type
         if (portSettings.pty == 3) {
-            modes = [
-                'none',
-                'DHT11',
-                'DHT22',
-                '1W'
-            ];
-            text += _('Sensor type:') + ' <select class="tvalue" data-type="d" data-port="' + index + '">';
-            text += '<option value="0" ' + ((portSettings.d == 0) ? 'selected' : '') + '>' + _('none') + '</option>';
-            text += '<option value="1" ' + ((portSettings.d == 1) ? 'selected' : '') + '>DHT11</option>';
-            text += '<option value="2" ' + ((portSettings.d == 2) ? 'selected' : '') + '>DHT22</option>';
-            text += '<option value="3" ' + ((portSettings.d == 3) ? 'selected' : '') + '>1W</option>';
-            text += '</select>';
-        }
-        // pwm
-        if (portSettings.pty == 4) {
-            text += _('PWM:') + ' <input class="tvalue" data-type="pwm" type="text" data-port="' + index + '" value="' + (portSettings.pwm || 0) + '" size=4 maxsize="3"/>';
+            var sensorSelect = '<select class="tvalue" data-type="d" data-port="' + index + '">';
+            sensorSelect += '<option value="0" ' + ((portSettings.d == 0) ? 'selected' : '') + '>' + _('none') + '</option>';
+            sensorSelect += '<option value="1" ' + ((portSettings.d == 1) ? 'selected' : '') + '>DHT11</option>';
+            sensorSelect += '<option value="2" ' + ((portSettings.d == 2) ? 'selected' : '') + '>DHT22</option>';
+            sensorSelect += '<option value="3" ' + ((portSettings.d == 3) ? 'selected' : '') + '>1W</option>';
+            sensorSelect += '</select>';
+            addField(_('Sensor type:'), sensorSelect);
         }
 
-        // tr
-        if (portSettings.pty == 0 || portSettings.pty == 2 || portSettings.pty == 3) {
-            text += _('TR:') + ' <select class="tvalue" data-type="tr" data-port="' + index + '">';
-            text += '<option value="0" ' + ((portSettings.tr == 0) ? 'selected' : '') + '>' + _('not monitored') + '</option>';
-            text += '<option value="1" ' + ((portSettings.tr == 1) ? 'selected' : '') + '>Act</option>';
-            text += '<option value="2" ' + ((portSettings.tr == 2) ? 'selected' : '') + '>Net</option>';
-            text += '<option value="3" ' + ((portSettings.tr == 3) ? 'selected' : '') + '>Net & Act</option>';
-            text += '<option value="4" ' + ((portSettings.tr == 4) ? 'selected' : '') + '>Net > Act</option>';
-            text += '<option value="5" ' + ((portSettings.tr == 5) ? 'selected' : '') + '>Act & Mqtt</option>';
-            text += '</select>';
+        if (portSettings.pty == 4) {
+            addField(_('PWM:'), '<input class="tvalue" data-type="pwm" type="text" data-port="' + index + '" value="' + (portSettings.pwm || 0) + '" maxlength="3"/>', 'field--compact');
         }
-        
+
+        if (portSettings.pty == 0 || portSettings.pty == 2 || portSettings.pty == 3) {
+            var trSelect = '<select class="tvalue" data-type="tr" data-port="' + index + '">';
+            trSelect += '<option value="0" ' + ((portSettings.tr == 0) ? 'selected' : '') + '>' + _('not monitored') + '</option>';
+            trSelect += '<option value="1" ' + ((portSettings.tr == 1) ? 'selected' : '') + '>Act</option>';
+            trSelect += '<option value="2" ' + ((portSettings.tr == 2) ? 'selected' : '') + '>Net</option>';
+            trSelect += '<option value="3" ' + ((portSettings.tr == 3) ? 'selected' : '') + '>Net & Act</option>';
+            trSelect += '<option value="4" ' + ((portSettings.tr == 4) ? 'selected' : '') + '>Net > Act</option>';
+            trSelect += '<option value="5" ' + ((portSettings.tr == 5) ? 'selected' : '') + '>Act & Mqtt</option>';
+            trSelect += '</select>';
+            addField(_('TR:'), trSelect);
+        }
+
         if (portSettings.in == 1) {
-            text += _('TR:') + ' <select class="tvalue" data-type="rm" data-port="' + index + '">';
-            text += '<option value="0" ' + ((portSettings.rm == 0) ? 'selected' : '') + '>' + _('not monitored') + '</option>';
-            text += '<option value="1" ' + ((portSettings.rm == 1) ? 'selected' : '') + '>Act</option>';
-            text += '</select>';
+            var rmSelect = '<select class="tvalue" data-type="rm" data-port="' + index + '">';
+            rmSelect += '<option value="0" ' + ((portSettings.rm == 0) ? 'selected' : '') + '>' + _('not monitored') + '</option>';
+            rmSelect += '<option value="1" ' + ((portSettings.rm == 1) ? 'selected' : '') + '>Act</option>';
+            rmSelect += '</select>';
+            addField(_('TR:'), rmSelect);
         }
 
         if (portSettings.pty == 5) {
-            text += _('Count:') + ' <input class="tvalue" data-type="pix" type="text"  style="width: 70px" data-port="' + index + '" value="' + (portSettings.pix || 0) + '" maxsize="3"/>';
+            addField(_('Count:'), '<input class="tvalue" data-type="pix" type="text" data-port="' + index + '" value="' + (portSettings.pix || 0) + '" maxlength="3"/>', 'field--compact');
         }
-        
+
         if (portSettings.pty == 7) {
-            text += _('I2C bus speed:') + ' <select class="tvalue" data-type="m" data-port="' + index + '">';
-            text += '<option value="1" ' + ((portSettings.m == 1) ? 'selected' : '') + '>100</option>';
-            text += '<option value="2" ' + ((portSettings.m == 2) ? 'selected' : '') + '>200</option>';
-            text += '<option value="3" ' + ((portSettings.m == 3) ? 'selected' : '') + '>300</option>';
-            text += '<option value="3" ' + ((portSettings.m == 4) ? 'selected' : '') + '>400</option>';
-            text += '</select>';
+            var speedSelect = '<select class="tvalue" data-type="m" data-port="' + index + '">';
+            speedSelect += '<option value="1" ' + ((portSettings.m == 1) ? 'selected' : '') + '>100</option>';
+            speedSelect += '<option value="2" ' + ((portSettings.m == 2) ? 'selected' : '') + '>200</option>';
+            speedSelect += '<option value="3" ' + ((portSettings.m == 3) ? 'selected' : '') + '>300</option>';
+            speedSelect += '<option value="4" ' + ((portSettings.m == 4) ? 'selected' : '') + '>400</option>';
+            speedSelect += '</select>';
+            addField(_('I2C bus speed:'), speedSelect);
         }
 
         if (portSettings.pty == 8) {
-            text += _('Mast:') + ' <select class="tvalue" data-type="d" data-port="' + index + '">';
-            text += '<option value="255" ' + ((portSettings.d == 255) ? 'selected' : '') + '>' + _('NC') + '</option>';
-            text += '<option value="0" ' + ((portSettings.d == 0) ? 'selected' : '') + '>P-0</option>';
-            text += '<option value="1" ' + ((portSettings.d == 1) ? 'selected' : '') + '>P-1</option>';
-            text += '<option value="2" ' + ((portSettings.d == 2) ? 'selected' : '') + '>P-2</option>';
-            text += '<option value="3" ' + ((portSettings.d == 3) ? 'selected' : '') + '>P-3</option>';
-            text += '<option value="4" ' + ((portSettings.d == 4) ? 'selected' : '') + '>P-4</option>';
-            text += '<option value="5" ' + ((portSettings.d == 5) ? 'selected' : '') + '>P-5</option>';
-            text += '<option value="6" ' + ((portSettings.d == 6) ? 'selected' : '') + '>P-6</option>';
-            text += '<option value="7" ' + ((portSettings.d == 7) ? 'selected' : '') + '>P-7</option>';
-            text += '<option value="8" ' + ((portSettings.d == 8) ? 'selected' : '') + '>P-8</option>';
-            text += '</select>';
-        }
-        if (portSettings.pty == 8) {
-            text += _('Mod:') + ' <select class="tvalue" data-type="m" data-port="' + index + '">';
-            text += '<option value="0" ' + ((portSettings.m == 0) ? 'selected' : '') + '>' + _('Same') + '</option>';
-            text += '<option value="1" ' + ((portSettings.m == 1) ? 'selected' : '') + '>Invert</option>';
-            text += '<option value="2" ' + ((portSettings.m == 2) ? 'selected' : '') + '>Flicker</option>';
-            text += '<option value="3" ' + ((portSettings.m == 3) ? 'selected' : '') + '>Pulse</option>';
-            text += '</select>';
-        }        
+            var mastSelect = '<select class="tvalue" data-type="d" data-port="' + index + '">';
+            mastSelect += '<option value="255" ' + ((portSettings.d == 255) ? 'selected' : '') + '>' + _('NC') + '</option>';
+            mastSelect += '<option value="0" ' + ((portSettings.d == 0) ? 'selected' : '') + '>P-0</option>';
+            mastSelect += '<option value="1" ' + ((portSettings.d == 1) ? 'selected' : '') + '>P-1</option>';
+            mastSelect += '<option value="2" ' + ((portSettings.d == 2) ? 'selected' : '') + '>P-2</option>';
+            mastSelect += '<option value="3" ' + ((portSettings.d == 3) ? 'selected' : '') + '>P-3</option>';
+            mastSelect += '<option value="4" ' + ((portSettings.d == 4) ? 'selected' : '') + '>P-4</option>';
+            mastSelect += '<option value="5" ' + ((portSettings.d == 5) ? 'selected' : '') + '>P-5</option>';
+            mastSelect += '<option value="6" ' + ((portSettings.d == 6) ? 'selected' : '') + '>P-6</option>';
+            mastSelect += '<option value="7" ' + ((portSettings.d == 7) ? 'selected' : '') + '>P-7</option>';
+            mastSelect += '<option value="8" ' + ((portSettings.d == 8) ? 'selected' : '') + '>P-8</option>';
+            mastSelect += '</select>';
+            addField(_('Mast:'), mastSelect);
 
-        //misc and adc(misc)
-        if (portSettings.pty == 3 && portSettings.d != 0 && portSettings.m != 0) {     
-            text += _('Threshold:') + ' <input class="tvalue" data-type="misc" type="text"  style="width: 70px" data-port="' + index + '" value="' + (portSettings.misc || 0) + '" maxsize="3"/>';
-            text += _('Hysteresis:') + ' <input class="tvalue" data-type="hy" type="text"  style="width: 70px" data-port="' + index + '" value="' + (portSettings.hy || 0) + '" maxsize="3"/>' + _(' * 0,1');
+            var modSelect = '<select class="tvalue" data-type="m" data-port="' + index + '">';
+            modSelect += '<option value="0" ' + ((portSettings.m == 0) ? 'selected' : '') + '>' + _('Same') + '</option>';
+            modSelect += '<option value="1" ' + ((portSettings.m == 1) ? 'selected' : '') + '>Invert</option>';
+            modSelect += '<option value="2" ' + ((portSettings.m == 2) ? 'selected' : '') + '>Flicker</option>';
+            modSelect += '<option value="3" ' + ((portSettings.m == 3) ? 'selected' : '') + '>Pulse</option>';
+            modSelect += '</select>';
+            addField(_('Mod:'), modSelect);
+        }
+
+        if (portSettings.pty == 3 && portSettings.d != 0 && portSettings.m != 0) {
+            addField(_('Threshold:'), '<input class="tvalue" data-type="misc" type="text" data-port="' + index + '" value="' + (portSettings.misc || 0) + '" maxlength="3"/>', 'field--compact');
+            addField(_('Hysteresis:'), '<div class="field__inline"><input class="tvalue" data-type="hy" type="text" data-port="' + index + '" value="' + (portSettings.hy || 0) + '" maxlength="3"/><span class="field__note">' + _(' * 0,1') + '</span></div>', 'field--compact');
         }
         if (portSettings.pty == 2 && portSettings.m != 0) {
-            text += _('Threshold:') + ' <input class="tvalue" data-type="adc" type="text"  style="width: 70px" data-port="' + index + '" value="' + (portSettings.adc || 0) + '" maxsize="3"/>';
-            text += _('Hysteresis:') + ' <input class="tvalue" data-type="hy" type="text"  style="width: 70px" data-port="' + index + '" value="' + (portSettings.hy || 0) + '" maxsize="3"/>';
+            addField(_('Threshold:'), '<input class="tvalue" data-type="adc" type="text" data-port="' + index + '" value="' + (portSettings.adc || 0) + '" maxlength="3"/>', 'field--compact');
+            addField(_('Hysteresis:'), '<input class="tvalue" data-type="hy" type="text" data-port="' + index + '" value="' + (portSettings.hy || 0) + '" maxlength="3"/>', 'field--compact');
         }
 
         if (portSettings.pty == 2 || portSettings.pty == 4) {
-            text += _('Offset:') + ' <input class="tvalue" data-type="offset" type="text" data-port="' + index + '" style="width: 30px" value="' + (portSettings.offset || 0) + '"/>';
-            text += _('Factor:') + ' <input class="tvalue" data-type="factor" type="text" data-port="' + index + '" style="width: 30px" value="' + (portSettings.factor || 1) + '"/>';
+            addField(_('Offset:'), '<input class="tvalue" data-type="offset" type="text" data-port="' + index + '" value="' + (portSettings.offset || 0) + '" maxlength="5"/>', 'field--compact');
+            addField(_('Factor:'), '<input class="tvalue" data-type="factor" type="text" data-port="' + index + '" value="' + (portSettings.factor || 1) + '" maxlength="5"/>', 'field--compact');
         }
-        if (portSettings.pty == 2) {     
-            text += _('Period:') + ' <input class="tvalue" data-type="d" type="text"  style="width: 50px" data-port="' + index + '" value="' + (portSettings.d || 0) + '" maxsize="3"/>' + _(' * 0,1s');
+        if (portSettings.pty == 2) {
+            addField(_('Period:'), '<div class="field__inline"><input class="tvalue" data-type="d" type="text" data-port="' + index + '" value="' + (portSettings.d || 0) + '" maxlength="3"/><span class="field__note">' + _(' * 0,1s') + '</span></div>', 'field--compact');
         }
 
         if (portSettings.pty == 0) {
             if (portSettings.m == 1) {
-                text += ', ' + _('Long:')   + ' <input type="checkbox" class="tvalue" data-type="long" data-port="' + index + '" ' + (portSettings.long   ? 'checked' : '') + '/>, ';
+                addField(_('Long:'), '<input type="checkbox" class="tvalue" data-type="long" data-port="' + index + '" ' + (portSettings.long ? 'checked' : '') + '/>', 'field--checkbox field--compact');
             }
-            text +=        _('Double:') + ' <input type="checkbox" class="tvalue" data-type="double" data-port="' + index + '" ' + (portSettings.double ? 'checked' : '') + '/>';
+            addField(_('Double:'), '<input type="checkbox" class="tvalue" data-type="double" data-port="' + index + '" ' + (portSettings.double ? 'checked' : '') + '/>', 'field--checkbox field--compact');
         }
         if (portSettings.in == 1) {
             if (portSettings.pm == 1) {
-                text += ', ' + _('Long:')   + ' <input type="checkbox" class="tvalue" data-type="long" data-port="' + index + '" ' + (portSettings.long   ? 'checked' : '') + '/>, ';
+                addField(_('Long:'), '<input type="checkbox" class="tvalue" data-type="long" data-port="' + index + '" ' + (portSettings.long ? 'checked' : '') + '/>', 'field--checkbox field--compact');
             }
-            text +=        _('Double:') + ' <input type="checkbox" class="tvalue" data-type="double" data-port="' + index + '" ' + (portSettings.double ? 'checked' : '') + '/>';
+            addField(_('Double:'), '<input type="checkbox" class="tvalue" data-type="double" data-port="' + index + '" ' + (portSettings.double ? 'checked' : '') + '/>', 'field--checkbox field--compact');
         }
-        text += '</td>';
 
-        text += '</tr>';
-        return text;
+        card.push('<div class="port-card__grid">');
+        card.push(fields.join(''));
+        card.push('</div>');
+        card.push('</div>');
+        card.push('</div>');
+        return card.join('');
     }
 
     function valueChanged() {
@@ -676,24 +933,19 @@
     }
 
     function showPorts() {
-        var text = '<table class="tspace">';
-        text += '<tr class="tspace ui-widget-header">';
-        text += '<th class="tspace"></th>';
-        // name, room, role, pty(type), acm(Action), ecm(net action), m(mode), d(default state), pwm(0-255), misc (threshold)
-        text += '<th class="tspace">' + _('Name') + '</th>';
-        text += '<th class="tspace">' + _('Room') + '</th>';
-        text += '<th class="tspace">' + _('Role') + '</th>';
-        text += '<th class="tspace">' + _('Type') + '</th>';
-        text += '<th class="tspace">' + _('Mode') + '</th>';
-        text += '<th class="tspace"></th>';
-        text += '<th class="tspace"></th>';
-        text += '</tr>';
-
-        for (var i = 0; i < ports.length; i++) {
-            text += showOnePort(i, ports[i]);
+        var content;
+        if (!ports || !ports.length) {
+            content = '<div class="empty-state">' + _('No ports configured yet') + '</div>';
+        } else {
+            var blocks = ['<div class="ports-grid">'];
+            for (var i = 0; i < ports.length; i++) {
+                blocks.push(showOnePort(i, ports[i]));
+            }
+            blocks.push('</div>');
+            content = blocks.join('');
         }
-        text += '</table>';
-        $('#ports').html(text);
+
+        $('#ports').html(content);
 
         $('.tvalue').each(function () {
             if ($(this).attr('type') == 'text') {
@@ -706,17 +958,23 @@
 
         $('.btn-delete').button({
             icons: {primary: 'ui-icon-trash'},
-            text:  false
-        }).css({width: 22, height: 22}).click(onDelete);
+            text: false
+        }).css({width: 34, height: 34}).click(onDelete);
+
         $('.btn-up').button({
             icons: {primary: 'ui-icon-arrowthick-1-n'},
-            text:  false
-        }).css({width: 22, height: 22}).click(onUp);
+            text: false
+        }).css({width: 34, height: 34}).click(onUp);
+
         $('.btn-down').button({
             icons: {primary: 'ui-icon-arrowthick-1-s'},
-            text:  false
-        }).css({width: 22, height: 22}).click(onDown);
+            text: false
+        }).css({width: 34, height: 34}).click(onDown);
 
+        if (ports && ports.length) {
+            $('.btn-up').first().button('disable');
+            $('.btn-down').last().button('disable');
+        }
     }
 
     function readRooms() {
@@ -1189,41 +1447,61 @@
 
 <!-- you have to put your config page in a div with id adapter-container -->
 <div id="adapter-container">
+    <div class="page-header">
+        <img src="megad.png" alt="Mega-ESP" />
+        <div>
+            <h2 class="translate">Mega-ESP adapter settings</h2>
+        </div>
+    </div>
 
-    <table><tr><td><img src="megad.png"></td><td><h3 class="translate">Mega-ESP adapter settings</h3></td></tr></table>
+    <div class="section-card">
+        <div class="settings-grid">
+            <div class="field">
+                <div class="field__label translate">IP:</div>
+                <div class="field__control"><input class="value" id="ip" /></div>
+            </div>
+            <div class="field">
+                <div class="field__label translate">Mega-ESP Name:</div>
+                <div class="field__control"><input class="value" id="name" /></div>
+            </div>
+            <div class="field">
+                <div class="field__label translate">Poll interval (sec):</div>
+                <div class="field__control"><input class="value" id="pollInterval" maxlength="3" /></div>
+            </div>
+            <div class="field">
+                <div class="field__label translate">ioBroker Web Port:</div>
+                <div class="field__control"><input class="value" id="port" maxlength="5" /></div>
+            </div>
+            <div class="field">
+                <div class="field__label translate">Long press detect (ms):</div>
+                <div class="field__control"><input class="value" id="longPress" maxlength="4" /></div>
+            </div>
+            <div class="field">
+                <div class="field__label translate">Mega-ESP Password:</div>
+                <div class="field__control"><input class="value" id="password" maxlength="3" /></div>
+            </div>
+            <div class="field">
+                <div class="field__label translate">Double press detect (ms):</div>
+                <div class="field__control"><input class="value" id="doublePress" maxlength="4" /></div>
+            </div>
+        </div>
+    </div>
 
-    <table>
-        <tr><td class="translate" style="text-align: right">IP:</td><td>                    <input  class="value" id="ip"/></select></td>
-            <!--td style="padding-left: 10px"><select id="ips" style="display:none"></select>&nbsp;<button id="discover" class="translateB">Find devices</button></td></tr-->
-        <tr><td class="translate" style="text-align: right">Mega-ESP Name:</td><td>         <input  class="value" id="name"/></td>
-            <td class="translate" style="text-align: right">Poll interval (sec):</td><td>   <input  class="value" id="pollInterval"  maxlength="3"/></td>
-        <tr><td class="translate" style="text-align: right">ioBroker Web Port:</td><td>     <input  class="value" id="port"          maxlength="5"/></td>
-            <td class="translate" style="text-align: right">Long press detect (ms):</td><td><input  class="value" id="longPress"     maxlength="4"/></td>
-        </tr>
-        <tr><td class="translate" style="text-align: right">Mega-ESP Password:</td><td>     <input  class="value" id="password"      maxlength="3"/></td>
-            <td class="translate" style="text-align: right">Double press detect (ms):</td><td><input  class="value" id="doublePress" maxlength="4"/></td>
-        </tr>
-    </table>
-    <button class="translate" id="add">Add new port</button>
-    <button class="translate" id="autoDetect">Auto detect ports</button>
-    <button class="translate" id="write">Write config to device</button>
-    <button class="translate" id="ipchange">Change ip or password</button>
-    <table>
-        <thead>
-        <col width="20px" />
-        <col width="100px" />
-        <col width="100px" />
-        <col width="100px" />
-        <col width="110px" />
-        <col width="100px" />
-        <col width="70px" />
-        <col width="*"/>
-        </thead>
-        <tbody id="ports"></tbody>
-    </table>
+    <div class="section-card">
+        <div class="section-card__header">
+            <h4 class="translate section-title">Ports</h4>
+            <div class="action-row">
+                <button class="translate" id="add">Add new port</button>
+                <button class="translate" id="autoDetect">Auto detect ports</button>
+                <button class="translate" id="write">Write config to device</button>
+                <button class="translate" id="ipchange">Change ip or password</button>
+            </div>
+        </div>
+        <div id="ports"></div>
+    </div>
 
     <div id="change-dialog" style="display: none">
-        <table>
+        <table class="dialog-table">
             <tr><td class="translate">Take new settings into config:</td><td><input type="checkbox" checked id="change_take"/></td></tr>
             <tr><td class="translate">Old IP:</td>      <td><input style="width: 100%" id="change_old_ip"/></td></tr>
             <tr><td class="translate">Old password:</td><td><input style="width: 100%" id="change_old_password"/></td></tr>
