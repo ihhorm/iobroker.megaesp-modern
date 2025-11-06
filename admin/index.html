@@ -312,6 +312,20 @@
 </style>
 
 <script type="text/javascript">
+    // Fallbacks for jQuery UI in Admin installations where UI plugins are unavailable
+    // Prevent runtime errors that would stop rendering the Ports UI
+    (function() {
+        if (window.jQuery) {
+            var $ = window.jQuery;
+            if (!$.fn.button) {
+                $.fn.button = function() { return this; };
+            }
+            if (!$.fn.dialog) {
+                $.fn.dialog = function() { return this; };
+            }
+        }
+    })();
+
     systemDictionary = {
         "Mega-ESP Name:":       {"en": "Mega-ESP Name:",        "de": "Mega-ESP Name:",             "ru": "Mega-ESP Имя:"},
         "ioBroker Web Port:":   {"en": "ioBroker Web Port:",    "de": "ioBroker Web Port:",         "ru": "ioBroker веб-порт:"},
@@ -1031,6 +1045,9 @@
         });
 
         onchange = onChange;
+
+        // Render immediately with current ports to avoid empty UI while rooms load
+        try { showPorts(); } catch (e) { /* ignore */ }
 
         readRooms();
 
