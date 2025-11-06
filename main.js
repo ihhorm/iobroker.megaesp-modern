@@ -145,6 +145,7 @@ function startAdapter(options) {
 
   adapter.on("ready", onReady);
   adapter.on("stateChange", onStateChange);
+  adapter.on("message", onMessage);
   adapter.on("unload", onUnload);
 
   return adapter;
@@ -198,6 +199,31 @@ function httpRequest(path, timeout = 5000) {
   });
 }
 
+function httpRequestHost(host, port, path, timeout = 5000, method = 'GET', body = null, headers = {}) {
+  return new Promise((resolve, reject) => {
+    const options = { host, port, path, timeout, method, headers };
+    const req = http.request(options, res => {
+      let data = "";
+      res.setEncoding("utf8");
+      res.on("data", chunk => (data += chunk));
+      res.on("end", () => {
+        if (res.statusCode !== 200) {
+          const err = new Error(`HTTP ${res.statusCode}: ${data}`);
+          err.statusCode = res.statusCode;
+          return reject(err);
+        }
+        resolve((data || "").trim());
+      });
+    });
+    req.on("error", reject);
+    req.on("timeout", () => req.destroy(new Error("Request timeout")));
+    if (body) {
+      req.write(body);
+    }
+    req.end();
+  });
+}
+
 function buildQuery(params) {
   return Object.keys(params)
     .filter(k => params[k] !== undefined && params[k] !== null)
@@ -240,6 +266,170 @@ async function onUnload(callback) {
     callback();
   } catch (err) {
     callback(err);
+  }
+}
+
+function mapModeToPty(mode) {
+  switch (mode) {
+    case 0: return 0; // INPUT
+    case 1: return 1; // OUTPUT SW
+    case 2: return 4; // PWM
+    case 3: return 2; // ADC
+    case 4: return 3; // Digital Sensor
+    default: return 255; // NC/unknown
+  }
+}
+
+function mapPtyToMode(pty) {
+  switch (pty) {
+    case 0: return 0; // INPUT
+    case 1: return 1; // OUTPUT SW
+    case 4: return 2; // PWM
+    case 2: return 3; // ADC
+    case 3: return 4; // Digital Sensor
+    default: return null; // ignore
+  }
+}
+
+async function onMessage(obj) {
+  if (!obj || !obj.command) return;
+  const respond = (msg) => {
+    if (obj.callback) {
+      adapter.sendTo(obj.from, obj.command, msg, obj.callback);
+    }
+  };
+
+  try {
+    if (obj.command === 'discover') {
+      // Keep simple: no network scan in adapter; user inputs IP manually
+      return respond({ devices: [] });
+    }
+
+    if (obj.command === 'detectPorts') {
+      const ip = (obj.message && obj.message.ip) || (adapter.config.ip || adapter.config.host);
+      const pass = (obj.message && obj.message.password) || (adapter.config.password || adapter.config.sec || 'sec');
+      const { host, port } = parseHost(ip);
+
+      // Read current port states string (classic API)
+      let response = '';
+      try {
+        response = await httpRequestHost(host, port, `/${encodeURIComponent(pass)}/?cmd=all`);
+      } catch (e) {
+        adapter.log.debug(`detectPorts: cmd=all failed: ${e.message}`);
+      }
+
+      // Read full config JSON
+      let cfg = null;
+      try {
+        const cfgStr = await httpRequestHost(host, port, `/config.json`);
+        cfg = JSON.parse(cfgStr);
+      } catch (e) {
+        adapter.log.warn(`detectPorts: /config.json failed: ${e.message}`);
+      }
+
+      let portsArr = [];
+      if (cfg && Array.isArray(cfg.gpio)) {
+        portsArr = cfg.gpio.map((g, idx) => {
+          const pty = mapModeToPty(Number(g.mode));
+          const out = { pty, name: `P${idx}` };
+          if (pty === 0) { // input
+            out.m = Number(g.trigger) || 0; // 0..2
+            out.long = false;
+            out.double = false;
+          } else if (pty === 1) { // output
+            out.d = Number(g.state) ? 1 : 0;
+          } else if (pty === 4) { // pwm
+            out.pwm = Math.max(0, Math.min(255, Number(g.state) || 0));
+            out.d = out.pwm; // keep for UI that expects 'd'
+          } else if (pty === 2) { // adc
+            out.adc = 0; out.factor = 1; out.offset = 0;
+          } else if (pty === 3) { // digital sensor
+            out.m = 0;
+            out.d = Number(g.sensorType) || 0; // 0 none, 1 DS18B20, 2 DHT22
+          }
+          // MCP/I2C ports not represented here; UI can add past index 9
+          return out;
+        });
+      }
+
+      return respond({ response, ports: portsArr });
+    }
+
+    if (obj.command === 'writeConfig') {
+      const ip = (obj.message && obj.message.ip) || (adapter.config.ip || adapter.config.host);
+      const pass = (obj.message && obj.message.password) || (adapter.config.password || adapter.config.sec || 'sec');
+      const { host, port } = parseHost(ip);
+      const incomingPorts = (obj.message && obj.message.ports) || [];
+
+      // Load base config
+      let cfgStr = await httpRequestHost(host, port, `/config.json`);
+      let cfg = JSON.parse(cfgStr);
+      if (!cfg || !Array.isArray(cfg.gpio)) {
+        throw new Error('Invalid config.json from device');
+      }
+
+      // Apply ports mapping for the first N entries
+      const gpio = cfg.gpio.map((g, idx) => {
+        const inP = incomingPorts[idx];
+        if (!inP || inP.pty === undefined) return g;
+        const mode = mapPtyToMode(Number(inP.pty));
+        if (mode === null) return g;
+        const out = Object.assign({}, g);
+        out.mode = mode;
+        if (mode === 0) { // input
+          out.trigger = Number(inP.m || 0);
+          out.state = 0;
+          out.sensorType = 0;
+        } else if (mode === 1) { // output
+          out.state = Number(inP.d || 0) ? 1 : 0;
+          out.trigger = cfg.defaultTrigger || 2;
+          out.sensorType = 0;
+        } else if (mode === 2) { // pwm
+          out.state = Math.max(0, Math.min(255, Number(inP.pwm !== undefined ? inP.pwm : inP.d || 0)));
+          out.trigger = cfg.defaultTrigger || 2;
+          out.sensorType = 0;
+        } else if (mode === 3) { // analog
+          out.state = 0;
+          out.trigger = cfg.defaultTrigger || 2;
+          out.sensorType = 0;
+        } else if (mode === 4) { // digital sensor
+          out.state = 0;
+          out.trigger = cfg.defaultTrigger || 2;
+          // map d: 1->DS18B20, 2->DHT22 else 0
+          const st = Number(inP.d || 0);
+          out.sensorType = (st === 1 || st === 2) ? st : 1;
+        }
+        return out;
+      });
+
+      const postDoc = { gpio };
+
+      // If admin requested to change IP/password, include in POST
+      if (obj.message && obj.message.config) {
+        const cfgMsg = obj.message.config;
+        if (cfgMsg.eip !== undefined || cfgMsg.pwd !== undefined) {
+          postDoc.net = {};
+          if (cfgMsg.eip) postDoc.net.ip = String(cfgMsg.eip);
+          // Password change is not directly supported via /config.json in this firmware; ignore or handle if added
+        }
+        if (cfgMsg.port !== undefined) {
+          // ignore; not used in firmware
+        }
+      }
+
+      const body = JSON.stringify(postDoc);
+      await httpRequestHost(host, port, `/config.json`, 10000, 'POST', body, {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(body)
+      });
+
+      return respond({ ok: true });
+    }
+  } catch (e) {
+    adapter.log.warn(`onMessage(${obj.command}) failed: ${e.message}`);
+    if (obj && obj.callback) {
+      adapter.sendTo(obj.from, obj.command, { error: e.message }, obj.callback);
+    }
   }
 }
 
