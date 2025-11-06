@@ -327,6 +327,8 @@
     })();
 
     systemDictionary = {
+        "Note":                 {"en": "Note",                  "de": "Hinweis",                   "ru": "Примечание"},
+        "Reserved for bus":    {"en": "Reserved for bus",      "de": "Für Bus reserviert",        "ru": "Зарезервировано под шину"},
         "Mega-ESP Name:":       {"en": "Mega-ESP Name:",        "de": "Mega-ESP Name:",             "ru": "Mega-ESP Имя:"},
         "ioBroker Web Port:":   {"en": "ioBroker Web Port:",    "de": "ioBroker Web Port:",         "ru": "ioBroker веб-порт:"},
         "Poll interval (sec):": {"en": "Poll interval (sec):",  "de": "Abfrage Intervall (sek):",   "ru": "Интервал опроса (сек):"},
@@ -492,7 +494,8 @@
         addField(_('Role'), '<input class="tvalue" type="text" data-type="role" data-port="' + index + '" value="' + (portSettings.role || '') + '"/>');
 
         if (index <= 9) {
-            var typeSelect = '<select class="tvalue" ' + ((index == 9 && portSettings.pty == 2) ? 'disabled' : '') + ' data-type="pty" data-port="' + index + '">';
+            var typeDisabled = (portSettings.hidden ? 'disabled' : ((index == 9 && portSettings.pty == 2) ? 'disabled' : ''));
+            var typeSelect = '<select class="tvalue" ' + typeDisabled + ' data-type="pty" data-port="' + index + '">';
             typeSelect += '<option value="255" ' + ((portSettings.pty == 255) ? 'selected' : '') + '>' + _('NC') + '</option>';
             typeSelect += '<option value="0" ' + ((portSettings.pty == 0) ? 'selected' : '') + '>' + _('Input') + '</option>';
             typeSelect += '<option value="1" ' + ((portSettings.pty == 1) ? 'selected' : '') + '>' + _('Output SW') + '</option>';
@@ -516,6 +519,9 @@
             }
             typeSelect += '</select>';
             addField(_('Type'), typeSelect);
+            if (portSettings.hidden) {
+                addField(_('Note'), '<div class="field__note">' + _('Reserved for bus') + '</div>');
+            }
         } else {
             var inSelect = '<select class="tvalue" data-type="in" data-port="' + index + '">';
             inSelect += '<option value="0" ' + ((portSettings.in == 0) ? 'selected' : '') + '>' + _('Output') + '</option>';
@@ -1263,6 +1269,13 @@
                     showMessage(msg.error, _('Error'), 'alert');
                     return;
                 }
+                // Prefer adapter-provided mapping if available
+                if (msg.ports && msg.ports.length) {
+                    ports = msg.ports;
+                    onchange();
+                    showPorts();
+                    return;
+                }
                 //OFF;OFF/0;OFF/0;25;temp:45.6;temp:45.6/hum:27
                 var _ports = msg.response ? msg.response.split(';') : [];
                 var settingsPorts =  msg.ports || [];
@@ -1495,7 +1508,7 @@
             </div>
             <div class="field">
                 <div class="field__label translate">Mega-ESP Password:</div>
-                <div class="field__control"><input class="value" id="password" maxlength="3" /></div>
+                <div class="field__control"><input class="value" id="password" maxlength="32" /></div>
             </div>
             <div class="field">
                 <div class="field__label translate">Double press detect (ms):</div>

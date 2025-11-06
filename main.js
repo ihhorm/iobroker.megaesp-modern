@@ -332,6 +332,7 @@ async function onMessage(obj) {
         portsArr = cfg.gpio.map((g, idx) => {
           const pty = mapModeToPty(Number(g.mode));
           const out = { pty, name: `P${idx}` };
+          out.hidden = Number(g.hidden) ? 1 : 0;
           if (pty === 0) { // input
             out.m = Number(g.trigger) || 0; // 0..2
             out.long = false;
