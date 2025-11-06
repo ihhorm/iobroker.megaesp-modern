@@ -67,6 +67,22 @@
                 "def":   false
             },
             "native": {}
-        }
+        },
+        { "_id": "display", "type": "channel", "common": { "name": "Display" }, "native": {} },
+        { "_id": "display.lcd", "type": "channel", "common": { "name": "LCD" }, "native": {} },
+        { "_id": "display.lcd.backlight", "type": "state", "common": { "name": "Backlight", "type": "boolean", "role": "switch", "read": true, "write": true }, "native": {} },
+        { "_id": "display.lcd.clear", "type": "state", "common": { "name": "Clear", "type": "boolean", "role": "button", "read": false, "write": true }, "native": {} },
+        { "_id": "display.lcd.row", "type": "state", "common": { "name": "Row", "type": "number", "role": "level", "read": true, "write": true }, "native": {} },
+        { "_id": "display.lcd.col", "type": "state", "common": { "name": "Col", "type": "number", "role": "level", "read": true, "write": true }, "native": {} },
+        { "_id": "display.lcd.text", "type": "state", "common": { "name": "Text", "type": "string", "role": "text", "read": true, "write": true }, "native": {} },
+        { "_id": "display.lcd.send", "type": "state", "common": { "name": "Send", "type": "boolean", "role": "button", "read": false, "write": true }, "native": {} },
+        { "_id": "display.oled", "type": "channel", "common": { "name": "OLED" }, "native": {} },
+        { "_id": "display.oled.invert", "type": "state", "common": { "name": "Invert", "type": "boolean", "role": "switch", "read": true, "write": true }, "native": {} },
+        { "_id": "display.oled.clear", "type": "state", "common": { "name": "Clear", "type": "boolean", "role": "button", "read": false, "write": true }, "native": {} },
+        { "_id": "display.oled.size", "type": "state", "common": { "name": "Size", "type": "number", "min": 1, "max": 4, "role": "level", "read": true, "write": true }, "native": {} },
+        { "_id": "display.oled.row", "type": "state", "common": { "name": "Row", "type": "number", "role": "level", "read": true, "write": true }, "native": {} },
+        { "_id": "display.oled.col", "type": "state", "common": { "name": "Col", "type": "number", "role": "level", "read": true, "write": true }, "native": {} },
+        { "_id": "display.oled.text", "type": "state", "common": { "name": "Text", "type": "string", "role": "text", "read": true, "write": true }, "native": {} },
+        { "_id": "display.oled.send", "type": "state", "common": { "name": "Send", "type": "boolean", "role": "button", "read": false, "write": true }, "native": {} }
     ]
 }

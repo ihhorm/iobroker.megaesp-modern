@@ -198,6 +198,19 @@ function httpRequest(path, timeout = 5000) {
   });
 }
 
+function buildQuery(params) {
+  return Object.keys(params)
+    .filter(k => params[k] !== undefined && params[k] !== null)
+    .map(k => `${encodeURIComponent(k)}=${encodeURIComponent(String(params[k]))}`)
+    .join("&");
+}
+
+async function httpSec(params) {
+  const qs = buildQuery(params);
+  const path = `/sec/?${qs}`;
+  return httpRequest(path);
+}
+
 async function onReady() {
   adapter.log.info("Initialising MegaESP modern adapter");
 
@@ -206,6 +219,7 @@ async function onReady() {
   const pollIntervalMs = Math.max(3, parseInt(adapter.config.pollInterval, 10) || DEFAULT_POLL_INTERVAL_SEC) * 1000;
 
   await createObjects();
+  await ensureDisplayDefaults();
   await pollAll();
 
   pollTimer = setInterval(() => pollAll().catch(err => {
@@ -213,6 +227,7 @@ async function onReady() {
   }), pollIntervalMs);
 
   adapter.subscribeStates("ports.*");
+  adapter.subscribeStates("display.*");
   adapter.setState("info.connection", true, true);
 }
 
@@ -359,6 +374,98 @@ async function createObjects() {
       });
     }
   }
+
+  // Display channels (LCD/OLED)
+  await adapter.setObjectNotExistsAsync("display", {
+    type: "channel",
+    common: { name: "Display" },
+    native: {}
+  });
+
+  await adapter.setObjectNotExistsAsync("display.lcd", {
+    type: "channel",
+    common: { name: "LCD" },
+    native: {}
+  });
+  await adapter.setObjectNotExistsAsync("display.lcd.backlight", {
+    type: "state",
+    common: { name: "Backlight", type: "boolean", role: "switch", read: true, write: true },
+    native: {}
+  });
+  await adapter.setObjectNotExistsAsync("display.lcd.clear", {
+    type: "state",
+    common: { name: "Clear", type: "boolean", role: "button", read: false, write: true },
+    native: {}
+  });
+  await adapter.setObjectNotExistsAsync("display.lcd.row", {
+    type: "state",
+    common: { name: "Row", type: "number", role: "level", read: true, write: true },
+    native: {}
+  });
+  await adapter.setObjectNotExistsAsync("display.lcd.col", {
+    type: "state",
+    common: { name: "Col", type: "number", role: "level", read: true, write: true },
+    native: {}
+  });
+  await adapter.setObjectNotExistsAsync("display.lcd.text", {
+    type: "state",
+    common: { name: "Text", type: "string", role: "text", read: true, write: true },
+    native: {}
+  });
+  await adapter.setObjectNotExistsAsync("display.lcd.send", {
+    type: "state",
+    common: { name: "Send", type: "boolean", role: "button", read: false, write: true },
+    native: {}
+  });
+
+  await adapter.setObjectNotExistsAsync("display.oled", {
+    type: "channel",
+    common: { name: "OLED" },
+    native: {}
+  });
+  await adapter.setObjectNotExistsAsync("display.oled.invert", {
+    type: "state",
+    common: { name: "Invert", type: "boolean", role: "switch", read: true, write: true },
+    native: {}
+  });
+  await adapter.setObjectNotExistsAsync("display.oled.clear", {
+    type: "state",
+    common: { name: "Clear", type: "boolean", role: "button", read: false, write: true },
+    native: {}
+  });
+  await adapter.setObjectNotExistsAsync("display.oled.size", {
+    type: "state",
+    common: { name: "Size", type: "number", min: 1, max: 4, role: "level", read: true, write: true },
+    native: {}
+  });
+  await adapter.setObjectNotExistsAsync("display.oled.row", {
+    type: "state",
+    common: { name: "Row", type: "number", role: "level", read: true, write: true },
+    native: {}
+  });
+  await adapter.setObjectNotExistsAsync("display.oled.col", {
+    type: "state",
+    common: { name: "Col", type: "number", role: "level", read: true, write: true },
+    native: {}
+  });
+  await adapter.setObjectNotExistsAsync("display.oled.text", {
+    type: "state",
+    common: { name: "Text", type: "string", role: "text", read: true, write: true },
+    native: {}
+  });
+  await adapter.setObjectNotExistsAsync("display.oled.send", {
+    type: "state",
+    common: { name: "Send", type: "boolean", role: "button", read: false, write: true },
+    native: {}
+  });
+}
+
+async function ensureDisplayDefaults() {
+  await adapter.setStateAsync("display.lcd.row", { val: 0, ack: true });
+  await adapter.setStateAsync("display.lcd.col", { val: 0, ack: true });
+  await adapter.setStateAsync("display.oled.row", { val: 0, ack: true });
+  await adapter.setStateAsync("display.oled.col", { val: 0, ack: true });
+  await adapter.setStateAsync("display.oled.size", { val: 1, ack: true });
 }
 
 async function pollAll() {
@@ -532,6 +639,70 @@ async function onStateChange(id, state) {
     return;
   }
 
+  // Handle display.* states
+  if (id.startsWith(`${adapter.namespace}.display.`)) {
+    try {
+      if (id.endsWith("display.lcd.backlight")) {
+        await httpSec({ lcd: 1, bl: state.val ? 1 : 2 });
+        await adapter.setStateAsync(id, { val: !!state.val, ack: true });
+        return;
+      }
+      if (id.endsWith("display.lcd.clear")) {
+        await httpSec({ lcd: 1, cl: 1 });
+        await adapter.setStateAsync(id, { val: false, ack: true });
+        return;
+      }
+      if (id.endsWith("display.lcd.send")) {
+        const [row, col, text] = await Promise.all([
+          adapter.getStateAsync("display.lcd.row"),
+          adapter.getStateAsync("display.lcd.col"),
+          adapter.getStateAsync("display.lcd.text")
+        ]);
+        await httpSec({
+          lcd: 1,
+          row: Number(row?.val || 0),
+          col: Number(col?.val || 0),
+          cmd: String(text?.val || "")
+        });
+        await adapter.setStateAsync(id, { val: false, ack: true });
+        return;
+      }
+
+      if (id.endsWith("display.oled.invert")) {
+        await httpSec({ oled: 1, inv: state.val ? 1 : 0 });
+        await adapter.setStateAsync(id, { val: !!state.val, ack: true });
+        return;
+      }
+      if (id.endsWith("display.oled.clear")) {
+        await httpSec({ oled: 1, cl: 1 });
+        await adapter.setStateAsync(id, { val: false, ack: true });
+        return;
+      }
+      if (id.endsWith("display.oled.send")) {
+        const [row, col, size, text] = await Promise.all([
+          adapter.getStateAsync("display.oled.row"),
+          adapter.getStateAsync("display.oled.col"),
+          adapter.getStateAsync("display.oled.size"),
+          adapter.getStateAsync("display.oled.text")
+        ]);
+        const sz = Math.max(1, Math.min(4, Number(size?.val || 1)));
+        await httpSec({
+          oled: 1,
+          row: Number(row?.val || 0),
+          col: Number(col?.val || 0),
+          size: sz,
+          cmd: String(text?.val || "")
+        });
+        await adapter.setStateAsync(id, { val: false, ack: true });
+        return;
+      }
+    } catch (err) {
+      adapter.log.error(`Display command failed for ${id}: ${err.message}`);
+    }
+    return;
+  }
+
+  // Handle ports.* states
   const basePrefix = `${adapter.namespace}.ports.`;
   if (!id.startsWith(basePrefix)) {
     return;
