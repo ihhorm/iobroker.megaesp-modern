@@ -101,11 +101,24 @@ const I2C_SENSORS = [
     ]
   },
   {
+    // Legacy MCP23017 entry kept for backward compatibility: firmware no longer
+    // exposes it via pt=18, but we keep objects so setups don't break.
+    port: 18,
+    key: "mcp23017",
+    label: "MCP23017",
+    metrics: [
+      { field: "mcp_gpio", id: "gpio", role: "text", unit: "", decimals: null },
+      { field: "mcp_gpioa", id: "porta", role: "value", unit: "", decimals: 0 },
+      { field: "mcp_gpiob", id: "portb", role: "value", unit: "", decimals: 0 }
+    ]
+  },
+  {
+    // AHT20 shares pt=18 on firmware side; values are exposed as aht_t/aht_h
+    // and also mirrored as sht_t/sht_h/t/h for compatibility.
     port: 18,
     key: "aht20",
     label: "AHT20",
     metrics: [
-      // Native fields from firmware
       { field: "aht_t", id: "temperature", role: "value.temperature", unit: "°C", decimals: 1 },
       { field: "aht_h", id: "humidity", role: "value.humidity", unit: "%", decimals: 1 }
     ]
@@ -130,6 +143,11 @@ const I2C_SENSORS = [
     ]
   }
 ];
+
+const MCP23017 = {
+  basePort: 20, // P20..P35 -> MCP pins 0..15
+  pinCount: 16
+};
 
 let adapter;
 let pollTimer;
@@ -566,6 +584,28 @@ async function createObjects() {
     }
   }
 
+  // MCP23017 pins (P20..P35)
+  const mcpBaseId = "sensors.i2c.mcp23017";
+  await adapter.setObjectNotExistsAsync(mcpBaseId, {
+    type: "channel",
+    common: { name: "MCP23017 (P20..P35)" },
+    native: { basePort: MCP23017.basePort, pins: MCP23017.pinCount }
+  });
+  for (let pin = 0; pin < MCP23017.pinCount; pin++) {
+    const pinId = `${mcpBaseId}.pin${pin}`;
+    await adapter.setObjectNotExistsAsync(pinId, {
+      type: "state",
+      common: {
+        name: `MCP23017 pin ${pin} (P${MCP23017.basePort + pin})`,
+        type: "boolean",
+        role: "switch",
+        read: true,
+        write: true
+      },
+      native: { pin, port: MCP23017.basePort + pin }
+    });
+  }
+
   // Display channels (LCD/OLED)
   await adapter.setObjectNotExistsAsync("display", {
     type: "channel",
@@ -663,6 +703,7 @@ async function pollAll() {
   await pollPorts();
   await pollOneWire();
   await pollI2C();
+  await pollMCP();
 }
 
 async function pollPorts() {
@@ -795,6 +836,21 @@ async function pollI2C() {
   );
 }
 
+async function pollMCP() {
+  // MCP23017 pins are exposed via virtual ports P20..P35
+  for (let pin = 0; pin < MCP23017.pinCount; pin++) {
+    const port = MCP23017.basePort + pin;
+    try {
+      const response = await httpRequest(`/sec/?pt=${port}&cmd=get`);
+      const { state } = parseSwitchValue(response);
+      const id = `sensors.i2c.mcp23017.pin${pin}`;
+      await adapter.setStateAsync(id, { val: !!state, ack: true });
+    } catch (err) {
+      adapter.log.debug(`MCP23017 pin ${pin} (P${port}) polling failed: ${err.message}`);
+    }
+  }
+}
+
 function parseKeyValueList(str) {
   if (!str || str.toUpperCase() === "NA") {
     return null;
@@ -889,6 +945,26 @@ async function onStateChange(id, state) {
       }
     } catch (err) {
       adapter.log.error(`Display command failed for ${id}: ${err.message}`);
+    }
+    return;
+  }
+
+  // Handle MCP23017 pins
+  const mcpPrefix = `${adapter.namespace}.sensors.i2c.mcp23017.`;
+  if (id.startsWith(mcpPrefix)) {
+    const pinStr = id.substring(mcpPrefix.length);
+    const pin = parseInt(pinStr.replace(/^pin/, ""), 10);
+    if (!Number.isInteger(pin) || pin < 0 || pin >= MCP23017.pinCount) {
+      adapter.log.warn(`Write attempt on unknown MCP23017 pin state ${id}`);
+      return;
+    }
+    const port = MCP23017.basePort + pin;
+    const on = !!state.val;
+    try {
+      await httpSec({ pt: port, cmd: on ? 1 : 0 });
+      await adapter.setStateAsync(id, { val: on, ack: true });
+    } catch (err) {
+      adapter.log.error(`Failed to write MCP23017 pin ${pin} (P${port}): ${err.message}`);
     }
     return;
   }
