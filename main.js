@@ -102,12 +102,12 @@ const I2C_SENSORS = [
   },
   {
     port: 18,
-    key: "mcp23017",
-    label: "MCP23017",
+    key: "aht20",
+    label: "AHT20",
     metrics: [
-      { field: "mcp_gpio", id: "gpio", role: "text", unit: "", decimals: null },
-      { field: "mcp_gpioa", id: "porta", role: "value", unit: "", decimals: 0 },
-      { field: "mcp_gpiob", id: "portb", role: "value", unit: "", decimals: 0 }
+      // Native fields from firmware
+      { field: "aht_t", id: "temperature", role: "value.temperature", unit: "°C", decimals: 1 },
+      { field: "aht_h", id: "humidity", role: "value.humidity", unit: "%", decimals: 1 }
     ]
   },
   {
