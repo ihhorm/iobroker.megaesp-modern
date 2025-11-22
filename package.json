@@ -1,6 +1,6 @@
 {
   "name": "iobroker.megaesp-modern",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Modernised ioBroker adapter for Mega-ESP devices (ESP8266 firmware)",
   "main": "main.js",
   "scripts": {

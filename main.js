@@ -13,7 +13,7 @@ const PORT_MODES = {
   ANALOG: "analog"
 };
 
-const PORT_DEFS = [
+const DEFAULT_PORT_DEFS = [
   { idx: 0, key: "p0", label: "P0", mode: PORT_MODES.OUTPUT },
   { idx: 1, key: "p1", label: "P1", mode: PORT_MODES.OUTPUT },
   { idx: 2, key: "p2", label: "P2", mode: PORT_MODES.PWM },
@@ -25,6 +25,8 @@ const PORT_DEFS = [
   { idx: 8, key: "p8", label: "P8", mode: PORT_MODES.INPUT },
   { idx: 9, key: "p9", label: "P9", mode: PORT_MODES.ANALOG }
 ];
+
+let portDefs = [...DEFAULT_PORT_DEFS];
 
 const I2C_SENSORS = [
   {
@@ -255,6 +257,57 @@ async function httpSec(params) {
   return httpRequest(path);
 }
 
+function mapDeviceModeToPortMode(mode) {
+  switch (mode) {
+    case 0: return PORT_MODES.INPUT;   // IN
+    case 1: return PORT_MODES.OUTPUT;  // OutSW
+    case 2: return PORT_MODES.PWM;     // OutPWM
+    case 3: return PORT_MODES.ANALOG;  // ADC
+    case 4: return PORT_MODES.INPUT;   // DSen (treated as input with counter)
+    case 5: return PORT_MODES.OUTPUT;  // OutSL (slave output follows master)
+    default: return null;
+  }
+}
+
+function buildPortDefsFromConfig(cfg) {
+  if (!cfg || !Array.isArray(cfg.gpio)) {
+    throw new Error("Missing gpio array");
+  }
+
+  const defs = [];
+  cfg.gpio.forEach((entry, idx) => {
+    const mode = mapDeviceModeToPortMode(Number(entry.mode));
+    if (!mode) {
+      return;
+    }
+    defs.push({
+      idx,
+      key: `p${idx}`,
+      label: entry.name || `P${idx}`,
+      mode,
+      hidden: Number(entry.hidden) === 1
+    });
+  });
+
+  if (!defs.length) {
+    throw new Error("Device returned no usable ports");
+  }
+
+  return defs;
+}
+
+async function loadPortDefinitions() {
+  try {
+    const cfgStr = await httpRequest(`/config.json`, 8000);
+    const cfg = JSON.parse(cfgStr);
+    portDefs = buildPortDefsFromConfig(cfg);
+    adapter.log.info(`Loaded ${portDefs.length} port definitions from device`);
+  } catch (err) {
+    portDefs = [...DEFAULT_PORT_DEFS];
+    adapter.log.warn(`Failed to load port definitions from device, using defaults: ${err.message}`);
+  }
+}
+
 async function onReady() {
   adapter.log.info("Initialising MegaESP modern adapter");
 
@@ -262,6 +315,7 @@ async function onReady() {
   password = (adapter.config.password || adapter.config.sec || "sec").trim();
   const pollIntervalMs = Math.max(3, parseInt(adapter.config.pollInterval, 10) || DEFAULT_POLL_INTERVAL_SEC) * 1000;
 
+  await loadPortDefinitions();
   await createObjects();
   await ensureDisplayDefaults();
   await pollAll();
@@ -466,7 +520,10 @@ async function createObjects() {
     native: {}
   });
 
-  for (const port of PORT_DEFS) {
+  for (const port of portDefs) {
+    if (port.hidden) {
+      continue;
+    }
     const baseId = `ports.${port.key}`;
     const baseName = port.label;
     const isOutput = port.mode === PORT_MODES.OUTPUT;
@@ -714,8 +771,8 @@ async function pollPorts() {
     }
     const parts = response.split(";");
     parts.forEach((raw, idx) => {
-      const def = PORT_DEFS.find(p => p.idx === idx);
-      if (!def) {
+      const def = portDefs.find(p => p.idx === idx);
+      if (!def || def.hidden) {
         return;
       }
       handlePortValue(def, raw);
@@ -980,8 +1037,8 @@ async function onStateChange(id, state) {
     return;
   }
 
-  const def = PORT_DEFS.find(p => p.key === portKey);
-  if (!def) {
+  const def = portDefs.find(p => p.key === portKey);
+  if (!def || def.hidden) {
     adapter.log.warn(`Write attempt on unknown state ${id}`);
     return;
   }
